@@ -47,6 +47,6 @@ class CloudProvider(Protocol):
 
 
 def is_dns_enabled(tags: List[Dict[str, str]]) -> bool:
-    """Tag-based policy: only DNS=Yes (case-insensitive) instances are actionable."""
+    """Tag-based policy: DNS=Yes (case-insensitive) instances are protected from start/stop."""
     tag_map = {t["Key"]: t["Value"] for t in (tags or [])}
     return tag_map.get("DNS", "").lower() == "yes"

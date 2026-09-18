@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.providers.factory import get_provider
+from app.config.account_config import load_accounts
 
 app = FastAPI(title="Multi-Cloud Instance Manager - Cloud Service", version="0.1.0")
 
@@ -63,3 +64,12 @@ def stop_instances(req: InstanceActionRequest):
 def get_regions(account_key: str):
     provider = get_provider("aws")
     return {"accountKey": account_key, "regions": provider.get_regions(account_key)}
+
+
+@app.get("/accounts", dependencies=[Depends(verify_api_key)])
+def list_accounts():
+    accounts = load_accounts()
+    return [
+        {"key": a["key"], "name": a["name"], "accountId": a["accountId"]}
+        for a in accounts
+    ]

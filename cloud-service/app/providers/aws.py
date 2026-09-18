@@ -109,8 +109,8 @@ class AwsCloudProvider:
             inst = by_id.get(iid)
             if inst is None:
                 skipped.append({"instanceId": iid, "reason": "Instance not found in region"})
-            elif not is_dns_enabled(inst["tags"]):
-                skipped.append({"instanceId": iid, "reason": "DNS tag missing or not Yes"})
+            elif is_dns_enabled(inst["tags"]):
+                skipped.append({"instanceId": iid, "reason": "Protected: DNS=Yes"})
             else:
                 allowed.append(iid)
         return allowed, skipped
