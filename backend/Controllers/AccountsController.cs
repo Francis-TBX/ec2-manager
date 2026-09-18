@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ec2Manager.Api.DTOs;
+using Ec2Manager.Api.Services;
 
 namespace Ec2Manager.Api.Controllers;
 
@@ -9,22 +10,24 @@ namespace Ec2Manager.Api.Controllers;
 [Authorize]
 public class AccountsController : ControllerBase
 {
-    private readonly IConfiguration _config;
+    private readonly CloudServiceClient _cloud;
 
-    public AccountsController(IConfiguration config)
+    public AccountsController(CloudServiceClient cloud)
     {
-        _config = config;
+        _cloud = cloud;
     }
 
     [HttpGet]
-    public ActionResult<List<AccountMetadataDto>> List()
+    public async Task<ActionResult<List<AccountMetadataDto>>> List()
     {
-        // Phase 1: account metadata mirrors cloud-service's encrypted config.
-        // For now, single known account; will be replaced by a shared config source.
-        var accounts = new List<AccountMetadataDto>
-        {
-            new("AWS", "AWS", "083141433636")
-        };
+        var accounts = await _cloud.GetAccounts();
         return Ok(accounts);
+    }
+
+    [HttpGet("{accountKey}/regions")]
+    public async Task<ActionResult<List<string>>> GetRegions(string accountKey)
+    {
+        var regions = await _cloud.GetRegions(accountKey);
+        return Ok(regions);
     }
 }

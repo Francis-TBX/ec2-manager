@@ -61,4 +61,12 @@ public class CloudServiceClient
         var doc = await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts);
         return doc.GetProperty("regions").EnumerateArray().Select(r => r.GetString()!).ToList();
     }
+
+    public async Task<List<AccountMetadataDto>> GetAccounts()
+    {
+        var resp = await _http.GetAsync("/accounts");
+        resp.EnsureSuccessStatusCode();
+        var result = await resp.Content.ReadFromJsonAsync<List<AccountMetadataDto>>(JsonOpts);
+        return result ?? new List<AccountMetadataDto>();
+    }
 }

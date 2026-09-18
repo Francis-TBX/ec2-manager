@@ -142,3 +142,4 @@
 /home/ubuntu/ec2-manager/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 /home/ubuntu/ec2-manager/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
 /home/ubuntu/ec2-manager/backend/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
+/home/ubuntu/ec2-manager/backend/obj/Debug/net8.0/Ec2Manager.Api.sourcelink.json

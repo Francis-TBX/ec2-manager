@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Ec2Manager.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+323195e5b8064c536ccbbabe9e378c73d1aa0c3d")]
 [assembly: System.Reflection.AssemblyProductAttribute("Ec2Manager.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Ec2Manager.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

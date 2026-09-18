@@ -19,6 +19,11 @@ public class LogsController : ControllerBase
         _db = db;
     }
 
+    private static List<string>? SplitCsv(string? s) =>
+        string.IsNullOrWhiteSpace(s)
+            ? null
+            : s.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
     [HttpGet]
     public async Task<ActionResult<PagedResultDto<AuditLogDto>>> Get(
         [FromQuery] string? instanceId,
@@ -35,19 +40,24 @@ public class LogsController : ControllerBase
         if (pageSize < 1) pageSize = 25;
         if (pageSize > 100) pageSize = 100;
 
+        var accountKeys = SplitCsv(accountKey);
+        var regions = SplitCsv(region);
+        var actionTypes = SplitCsv(actionType);
+        var results = SplitCsv(result);
+
         var query = _db.AuditLogs.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(accountKey))
-            query = query.Where(a => a.AccountKey == accountKey);
+        if (accountKeys != null)
+            query = query.Where(a => accountKeys.Contains(a.AccountKey));
 
-        if (!string.IsNullOrWhiteSpace(region))
-            query = query.Where(a => a.Region == region);
+        if (regions != null)
+            query = query.Where(a => regions.Contains(a.Region));
 
-        if (!string.IsNullOrWhiteSpace(actionType))
-            query = query.Where(a => a.ActionType == actionType);
+        if (actionTypes != null)
+            query = query.Where(a => actionTypes.Contains(a.ActionType));
 
-        if (!string.IsNullOrWhiteSpace(result))
-            query = query.Where(a => a.Result == result);
+        if (results != null)
+            query = query.Where(a => results.Contains(a.Result));
 
         if (from.HasValue)
             query = query.Where(a => a.Timestamp >= from.Value);
@@ -57,8 +67,6 @@ public class LogsController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(instanceId))
         {
-            // InstanceIdsJson is a serialized string array; quote-anchored LIKE
-            // avoids depending on MySQL JSON functions via Pomelo.
             var needle = $"\"{instanceId}\"";
             query = query.Where(a => EF.Functions.Like(a.InstanceIdsJson, $"%{needle}%"));
         }

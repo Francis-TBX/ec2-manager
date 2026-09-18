@@ -47,26 +47,42 @@ public class InstancesController : ControllerBase
         );
     }
 
+    private static List<string>? SplitCsv(string? s) =>
+        string.IsNullOrWhiteSpace(s)
+            ? null
+            : s.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
     [HttpGet]
     public async Task<ActionResult<List<InstanceDto>>> List(
         [FromQuery] string accountKey,
         [FromQuery] string? region,
         [FromQuery] string? statuses,
         [FromQuery] string? search,
-        [FromQuery] bool? dnsOnly)
+        [FromQuery] bool? hideProtected)
     {
         if (string.IsNullOrWhiteSpace(accountKey))
             return BadRequest("accountKey is required.");
 
-        var statusList = string.IsNullOrWhiteSpace(statuses)
-            ? null
-            : statuses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        var accountKeys = SplitCsv(accountKey)!;
+        var regionsList = SplitCsv(region);
+        var statusList = SplitCsv(statuses);
 
-        var raw = await _cloud.ListInstancesRaw(accountKey, region, statusList, search);
+        // If exactly one region is selected, push it down to the cloud-service call
+        // (keeps the fast single-region query path). Otherwise fetch all regions per
+        // account and filter the merged results in-memory.
+        string? regionParam = (regionsList != null && regionsList.Count == 1) ? regionsList[0] : null;
+
+        var tasks = accountKeys.Select(ak => _cloud.ListInstancesRaw(ak, regionParam, statusList, search));
+        var results = await Task.WhenAll(tasks);
+        var raw = results.SelectMany(r => r).ToList();
+
         var instances = raw.Select(ToDto).ToList();
 
-        if (dnsOnly == true)
-            instances = instances.Where(i => i.DnsEnabled).ToList();
+        if (regionsList != null && regionsList.Count > 1)
+            instances = instances.Where(i => regionsList.Contains(i.Region)).ToList();
+
+        if (hideProtected == true)
+            instances = instances.Where(i => !i.DnsEnabled).ToList();
 
         return Ok(instances);
     }
