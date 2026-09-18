@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { listInstances, startInstances, stopInstances, type Instance } from '../api/instances'
 import { listAccounts } from '../api/accounts'
 import StatusBadge from '../components/StatusBadge'
+import InstanceDetailsModal from '../components/InstanceDetailsModal'
 
 const STATUS_OPTIONS = ['pending', 'running', 'shutting-down', 'terminated', 'stopping', 'stopped']
 
@@ -15,21 +17,22 @@ export default function Dashboard() {
   const [region, setRegion] = useState('')
   const [statuses, setStatuses] = useState<string[]>([])
   const [search, setSearch] = useState('')
-  const [dnsOnly, setDnsOnly] = useState(false)
+  const [hideProtected, setHideProtected] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [actionMessage, setActionMessage] = useState<string | null>(null)
+  const [detailsInstanceId, setDetailsInstanceId] = useState<string | null>(null)
 
   const { data: accounts } = useQuery({ queryKey: ['accounts'], queryFn: listAccounts })
 
   const { data: instances, isLoading, isError } = useQuery({
-    queryKey: ['instances', accountKey, region, statuses, search, dnsOnly],
+    queryKey: ['instances', accountKey, region, statuses, search, hideProtected],
     queryFn: () =>
       listInstances({
         accountKey,
         region: region || undefined,
         statuses: statuses.length > 0 ? statuses.join(',') : undefined,
         search: search || undefined,
-        dnsOnly: dnsOnly || undefined,
+        hideProtected: hideProtected || undefined,
       }),
     enabled: !!accountKey,
   })
@@ -92,6 +95,9 @@ export default function Dashboard() {
       <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 flex justify-between items-center shadow">
         <h1 className="text-xl font-bold">Instance Manager</h1>
         <div className="flex items-center gap-4">
+          <Link to="/logs" className="text-sm bg-white/20 hover:bg-white/30 rounded-lg px-3 py-1.5 transition">
+            Logs
+          </Link>
           <span className="text-sm opacity-90">{username}</span>
           <button onClick={logout} className="text-sm bg-white/20 hover:bg-white/30 rounded-lg px-3 py-1.5 transition">
             Logout
@@ -139,8 +145,8 @@ export default function Dashboard() {
             </div>
 
             <label className="flex items-center gap-2 text-sm text-slate-700 pb-1.5">
-              <input type="checkbox" checked={dnsOnly} onChange={(e) => setDnsOnly(e.target.checked)} />
-              DNS only
+              <input type="checkbox" checked={hideProtected} onChange={(e) => setHideProtected(e.target.checked)} />
+              Hide protected
             </label>
           </div>
 
@@ -220,7 +226,7 @@ export default function Dashboard() {
                   </th>
                   <th className="px-4 py-2 text-left font-medium text-slate-500">Name</th>
                   <th className="px-4 py-2 text-left font-medium text-slate-500">State</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-500">DNS</th>
+                  <th className="px-4 py-2 text-left font-medium text-slate-500">Protected</th>
                   <th className="px-4 py-2 text-left font-medium text-slate-500">Public IP</th>
                   <th className="px-4 py-2 text-left font-medium text-slate-500">Private IP</th>
                   <th className="px-4 py-2 text-left font-medium text-slate-500">Region</th>
@@ -230,11 +236,12 @@ export default function Dashboard() {
                 {(instances as Instance[]).map((inst, idx) => (
                   <tr
                     key={inst.instanceId}
-                    className={`border-b border-slate-100 hover:bg-indigo-50 transition ${
+                    onClick={() => setDetailsInstanceId(inst.instanceId)}
+                    className={`border-b border-slate-100 hover:bg-indigo-50 transition cursor-pointer ${
                       idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
                     }`}
                   >
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selected.has(inst.instanceId)}
@@ -247,8 +254,8 @@ export default function Dashboard() {
                     </td>
                     <td className="px-4 py-2"><StatusBadge state={inst.state} /></td>
                     <td className="px-4 py-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${inst.dnsEnabled ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-500'}`}>
-                        {inst.dnsEnabled ? 'Yes' : 'No'}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${inst.dnsEnabled ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}`}>
+                        {inst.dnsEnabled ? 'True' : 'False'}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-slate-600">{inst.publicIp ?? '—'}</td>
@@ -261,6 +268,15 @@ export default function Dashboard() {
           )}
         </div>
       </main>
+
+      {detailsInstanceId && (
+        <InstanceDetailsModal
+          instanceId={detailsInstanceId}
+          accountKey={accountKey}
+          region={(instances ?? []).find((i) => i.instanceId === detailsInstanceId)?.region ?? region}
+          onClose={() => setDetailsInstanceId(null)}
+        />
+      )}
     </div>
   )
 }

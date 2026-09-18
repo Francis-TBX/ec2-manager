@@ -18,7 +18,7 @@ export interface ListInstancesParams {
   region?: string
   statuses?: string
   search?: string
-  dnsOnly?: boolean
+  hideProtected?: boolean
 }
 
 export async function listInstances(params: ListInstancesParams): Promise<Instance[]> {
@@ -45,5 +45,19 @@ export async function startInstances(accountKey: string, region: string, instanc
 
 export async function stopInstances(accountKey: string, region: string, instanceIds: string[], dryRun: boolean): Promise<InstanceActionResult> {
   const { data } = await client.post<InstanceActionResult>('/instances/stop', { accountKey, region, instanceIds, dryRun })
+  return data
+}
+
+export interface Tag {
+  key: string
+  value: string
+}
+
+export interface InstanceDetail extends Instance {
+  tags: Tag[]
+}
+
+export async function getInstanceDetail(instanceId: string, accountKey: string, region: string): Promise<InstanceDetail> {
+  const { data } = await client.get<InstanceDetail>(`/instances/${instanceId}`, { params: { accountKey, region } })
   return data
 }
