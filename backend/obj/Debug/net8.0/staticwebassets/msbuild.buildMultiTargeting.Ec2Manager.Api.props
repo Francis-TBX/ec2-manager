@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../build/Ec2Manager.Api.props" />
+</Project>

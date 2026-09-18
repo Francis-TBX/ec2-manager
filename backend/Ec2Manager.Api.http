@@ -1,0 +1,6 @@
+@Ec2Manager.Api_HostAddress = http://localhost:5250
+
+GET {{Ec2Manager.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

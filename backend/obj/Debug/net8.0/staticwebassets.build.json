@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "p2l3qC1OsYlPRBLLKeuJjF27+xtueZ7BM6wz5BkuBCo=",
+  "Source": "Ec2Manager.Api",
+  "BasePath": "_content/Ec2Manager.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
